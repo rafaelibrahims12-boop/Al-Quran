@@ -1,0 +1,6 @@
+{
+  "name": "Al-Qur'an 7 Oxford Digital",
+  "description": "Platform Al-Qur'an digital modern berstandar Oxford dengan 7 pewarnaan tajwid interaktif, terjemahan Inggris & Indonesia, audio murottal tersinkronisasi, dan estetika liquid glass premium.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

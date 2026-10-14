@@ -1,0 +1,116 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-arabic: 'Amiri', 'Scheherazade New', serif;
+    --font-oxford: 'Cormorant Garamond', Georgia, serif;
+    --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  }
+}
+
+.font-arabic {
+  font-family: var(--font-arabic);
+}
+
+.font-oxford {
+  font-family: var(--font-oxford);
+}
+
+.font-sans {
+  font-family: var(--font-sans);
+}
+
+/* Liquid Glass Aesthetics */
+.liquid-glass-dark {
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 1px 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.liquid-glass-light {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07), inset 0 1px 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.liquid-glass-card {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.liquid-glass-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(217, 119, 6, 0.3);
+}
+
+/* Animated fluid liquid background orbs */
+@keyframes fluid-blob {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1) rotate(0deg);
+  }
+  33% {
+    transform: translate(30px, -40px) scale(1.1) rotate(6deg);
+  }
+  66% {
+    transform: translate(-20px, 30px) scale(0.95) rotate(-4deg);
+  }
+}
+
+.animate-liquid-1 {
+  animation: fluid-blob 16s ease-in-out infinite;
+}
+
+.animate-liquid-2 {
+  animation: fluid-blob 22s ease-in-out infinite reverse;
+}
+
+.animate-liquid-3 {
+  animation: fluid-blob 19s ease-in-out infinite 4s;
+}
+
+/* Arabic Text Typography Enhancement */
+.quran-arabic-text {
+  font-family: var(--font-arabic);
+  direction: rtl;
+  text-align: right;
+  line-height: 2.2;
+  word-spacing: 0.15em;
+  font-feature-settings: "cv01" on, "cv02" on;
+}
+
+/* Interactive Tajwid Styling & Glow */
+.tajwid-token {
+  display: inline;
+  padding: 0.08em 0.22em;
+  border-radius: 0.25rem;
+  transition: all 0.18s ease;
+  cursor: pointer;
+}
+
+.tajwid-token:hover {
+  filter: brightness(1.2);
+  box-shadow: 0 0 10px currentColor;
+}
+
+/* Custom Scrollbar for Liquid Surface */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.45);
+}
+
