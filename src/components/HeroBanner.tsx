@@ -8,7 +8,10 @@ import {
   BookmarkCheck,
   BookOpen,
   Info,
+  Shuffle,
 } from 'lucide-react';
+
+import { SURAH_START_PAGES } from '../data/quranPages';
 
 interface HeroBannerProps {
   surah: SurahDetail;
@@ -16,6 +19,8 @@ interface HeroBannerProps {
   onSelectTajwidFilter: (ruleId: TajwidRuleId | null) => void;
   onOpenTajwidGuide: () => void;
   onOpenSurahModal: () => void;
+  onOpenPages?: () => void;
+  onOpenWheel?: () => void;
   onPrevSurah: () => void;
   onNextSurah: () => void;
   onMarkLastRead: () => void;
@@ -30,6 +35,8 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
   onSelectTajwidFilter,
   onOpenTajwidGuide,
   onOpenSurahModal,
+  onOpenPages,
+  onOpenWheel,
   onPrevSurah,
   onNextSurah,
   onMarkLastRead,
@@ -37,6 +44,8 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
   viewMode,
   onToggleViewMode,
 }) => {
+  const startPage = surah.ayahs[0]?.page || SURAH_START_PAGES[surah.number] || 1;
+  const endPage = surah.ayahs[surah.ayahs.length - 1]?.page || startPage;
   return (
     <section className="relative overflow-hidden rounded-3xl mb-8 border border-white/15 shadow-2xl transition-all duration-300">
       {/* Background artwork image with liquid glass overlay */}
@@ -59,6 +68,14 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
             >
               <BookOpen className="w-3.5 h-3.5 text-amber-400" />
               <span>Surah #{surah.number} dari 114</span>
+            </button>
+            <span aria-hidden="true">·</span>
+            <button
+              onClick={onOpenPages}
+              className="hover:text-amber-300 transition-colors font-medium text-amber-300/90 cursor-pointer"
+              title="Buka daftar halaman mushaf (1 - 604)"
+            >
+              Hal. {startPage === endPage ? startPage : `${startPage}–${endPage}`}
             </button>
             <span aria-hidden="true">·</span>
             <span>Juz {surah.juz}</span>
@@ -94,6 +111,18 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
                 Mode Mushaf
               </button>
             </div>
+
+            {/* Roda Tilawah Button */}
+            {onOpenWheel && (
+              <button
+                onClick={onOpenWheel}
+                className="px-3 py-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 transition-all text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                title="Roda Putar Tilawah 24 Siswa (Juz 2 - 19)"
+              >
+                <Shuffle className="w-3.5 h-3.5 text-amber-400" />
+                <span className="hidden sm:inline">Roda Kelas</span>
+              </button>
+            )}
 
             {/* Mark Last Read */}
             <button

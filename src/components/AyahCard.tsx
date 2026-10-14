@@ -72,6 +72,12 @@ export const AyahCard: React.FC<AyahCardProps> = ({
           </span>
           <div className="text-slate-500 dark:text-slate-400 font-sans">
             <span>Ayat {ayah.numberInSurah}</span>
+            {ayah.page && (
+              <>
+                <span className="mx-1.5" aria-hidden="true">·</span>
+                <span className="text-amber-600 dark:text-amber-400 font-medium">Hal. {ayah.page}</span>
+              </>
+            )}
             {ayah.juz && (
               <>
                 <span className="mx-1.5" aria-hidden="true">·</span>

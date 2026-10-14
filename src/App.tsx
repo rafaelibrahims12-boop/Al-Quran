@@ -34,8 +34,10 @@ import { TajwidGuideModal } from './components/TajwidGuideModal';
 import { SurahSelectorModal } from './components/SurahSelector';
 import { BookmarksModal } from './components/BookmarksModal';
 import { SettingsDrawer } from './components/SettingsDrawer';
+import { ClassroomWheelModal } from './components/ClassroomWheelModal';
 import { Loader2, AlertCircle, ChevronUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { getSurahForPage } from './data/quranPages';
 
 export default function App() {
   // 1. Settings & Reader Preferences
@@ -76,9 +78,45 @@ export default function App() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isTajwidGuideOpen, setIsTajwidGuideOpen] = useState(false);
   const [isSurahListOpen, setIsSurahListOpen] = useState(false);
+  const [surahSelectorTab, setSurahSelectorTab] = useState<'surah' | 'halaman' | 'juz'>('surah');
+  const [isWheelOpen, setIsWheelOpen] = useState(false);
   const [isBookmarksOpen, setIsBookmarksOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
+
+  // Jump directly to canonical Quran page (1 - 604)
+  const handleJumpToPage = useCallback(async (pageNumber: number) => {
+    const targetSurahNum = getSurahForPage(pageNumber);
+    if (surahDetail && surahDetail.number === targetSurahNum) {
+      const targetAyah = surahDetail.ayahs.find((a) => a.page === pageNumber) || surahDetail.ayahs[0];
+      setActiveAyahNumber(targetAyah.numberInSurah);
+      setTimeout(() => {
+        const el = document.getElementById(`ayah-${targetAyah.numberInSurah}`) || document.getElementById(`quran-page-${pageNumber}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+    } else {
+      setIsLoading(true);
+      try {
+        const detail = await fetchSurahDetail(targetSurahNum, settings.reciter);
+        setSurahDetail(detail);
+        setCurrentSurahNumber(targetSurahNum);
+        const targetAyah = detail.ayahs.find((a) => a.page === pageNumber) || detail.ayahs[0];
+        setActiveAyahNumber(targetAyah.numberInSurah);
+        setTimeout(() => {
+          const el = document.getElementById(`ayah-${targetAyah.numberInSurah}`) || document.getElementById(`quran-page-${pageNumber}`);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 180);
+      } catch (e) {
+        console.error('Failed to jump to page:', e);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  }, [settings.reciter, surahDetail]);
 
   // Synchronize document theme class
   useEffect(() => {
@@ -209,7 +247,15 @@ export default function App() {
         onOpenSettings={() => setIsSettingsOpen(true)}
         onOpenTajwidGuide={() => setIsTajwidGuideOpen(true)}
         onOpenBookmarks={() => setIsBookmarksOpen(true)}
-        onOpenSurahList={() => setIsSurahListOpen(true)}
+        onOpenSurahList={() => {
+          setSurahSelectorTab('surah');
+          setIsSurahListOpen(true);
+        }}
+        onOpenPages={() => {
+          setSurahSelectorTab('halaman');
+          setIsSurahListOpen(true);
+        }}
+        onOpenWheel={() => setIsWheelOpen(true)}
         currentSurahName={surahDetail?.englishName}
         currentAyahNumber={activeAyahNumber}
       />
@@ -250,7 +296,15 @@ export default function App() {
                 activeTajwidFilter={activeTajwidFilter}
                 onSelectTajwidFilter={(ruleId) => setActiveTajwidFilter(ruleId)}
                 onOpenTajwidGuide={() => setIsTajwidGuideOpen(true)}
-                onOpenSurahModal={() => setIsSurahListOpen(true)}
+                onOpenSurahModal={() => {
+                  setSurahSelectorTab('surah');
+                  setIsSurahListOpen(true);
+                }}
+                onOpenPages={() => {
+                  setSurahSelectorTab('halaman');
+                  setIsSurahListOpen(true);
+                }}
+                onOpenWheel={() => setIsWheelOpen(true)}
                 onPrevSurah={() => {
                   if (currentSurahNumber > 1) {
                     loadSurah(currentSurahNumber - 1);
@@ -319,36 +373,52 @@ export default function App() {
                       activeTajwidFilter={activeTajwidFilter}
                       onPlayAyah={handlePlayAyah}
                       onOpenFullTajwidGuide={() => setIsTajwidGuideOpen(true)}
+                      onJumpToPage={handleJumpToPage}
                     />
                   </motion.div>
                 )}
               </AnimatePresence>
 
-              {/* Bottom Surah Navigation Bar */}
-              <div className="mt-12 p-6 rounded-2xl liquid-glass-dark border border-white/10 flex items-center justify-between text-xs text-slate-300">
+              {/* Bottom Surah & Page Navigation Bar */}
+              <div className="mt-12 p-6 rounded-2xl liquid-glass-dark border border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-300">
                 <button
                   onClick={() => {
                     if (currentSurahNumber > 1) loadSurah(currentSurahNumber - 1);
                   }}
                   disabled={currentSurahNumber <= 1}
-                  className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-25 transition-colors cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-25 transition-colors cursor-pointer w-full sm:w-auto"
                 >
                   ← Surah Sebelumnya
                 </button>
 
-                <button
-                  onClick={() => setIsSurahListOpen(true)}
-                  className="font-semibold text-amber-300 hover:text-amber-200 transition-colors"
-                >
-                  QS. {surahDetail.englishName} ({surahDetail.numberOfAyahs} Ayat)
-                </button>
+                <div className="flex items-center gap-2.5">
+                  <button
+                    onClick={() => {
+                      setSurahSelectorTab('surah');
+                      setIsSurahListOpen(true);
+                    }}
+                    className="font-semibold text-amber-300 hover:text-amber-200 transition-colors cursor-pointer"
+                  >
+                    QS. {surahDetail.englishName} ({surahDetail.numberOfAyahs} Ayat)
+                  </button>
+                  <span className="text-slate-600">·</span>
+                  <button
+                    onClick={() => {
+                      setSurahSelectorTab('halaman');
+                      setIsSurahListOpen(true);
+                    }}
+                    className="px-3 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 font-medium transition-colors cursor-pointer"
+                  >
+                    Pilih Halaman (1-604)
+                  </button>
+                </div>
 
                 <button
                   onClick={() => {
                     if (currentSurahNumber < 114) loadSurah(currentSurahNumber + 1);
                   }}
                   disabled={currentSurahNumber >= 114}
-                  className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-25 transition-colors cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-25 transition-colors cursor-pointer w-full sm:w-auto"
                 >
                   Surah Berikutnya →
                 </button>
@@ -380,6 +450,7 @@ export default function App() {
         onSelectSurah={(sNum, aNum) => {
           loadSurah(sNum, aNum || 1);
         }}
+        onSelectPage={handleJumpToPage}
       />
 
       <TajwidGuideModal
@@ -393,7 +464,9 @@ export default function App() {
         isOpen={isSurahListOpen}
         onClose={() => setIsSurahListOpen(false)}
         selectedSurahNumber={currentSurahNumber}
-        onSelectSurah={(sNum) => loadSurah(sNum, 1)}
+        onSelectSurah={(sNum, aNum) => loadSurah(sNum, aNum || 1)}
+        onSelectPage={handleJumpToPage}
+        initialCategory={surahSelectorTab}
       />
 
       <BookmarksModal
@@ -413,6 +486,18 @@ export default function App() {
         onClose={() => setIsSettingsOpen(false)}
         settings={settings}
         onUpdateSettings={updateSettings}
+      />
+
+      <ClassroomWheelModal
+        isOpen={isWheelOpen}
+        onClose={() => setIsWheelOpen(false)}
+        onOpenPageAndSurah={(sNum, aNum, pageNum) => {
+          if (pageNum) {
+            handleJumpToPage(pageNum);
+          } else {
+            loadSurah(sNum, aNum || 1);
+          }
+        }}
       />
 
       {/* Back to top smooth button */}

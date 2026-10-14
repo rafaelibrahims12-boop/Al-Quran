@@ -108,3 +108,95 @@ export async function fetchSurahDetail(surahNumber: number, reciterId: ReciterId
     throw err;
   }
 }
+
+export interface PageDetail {
+  pageNumber: number;
+  juz: number;
+  surahNumber: number;
+  surahName: string;
+  ayahs: (AyahData & { surahNumber: number; surahName: string })[];
+}
+
+const PAGE_CACHE = new Map<number, PageDetail>();
+
+/**
+ * Fetches all ayahs for a specific Quran page (1 - 604)
+ */
+export async function fetchPageDetail(pageNumber: number, reciterId: ReciterId = 'alafasy'): Promise<PageDetail> {
+  const cached = PAGE_CACHE.get(pageNumber);
+  if (cached) {
+    return cached;
+  }
+
+  try {
+    const response = await fetch(
+      `https://api.alquran.cloud/v1/page/${pageNumber}/editions/quran-uthmani,en.haleem,id.indonesian`
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to load page ${pageNumber} (HTTP ${response.status})`);
+    }
+
+    const json = await response.json();
+    if (!json.data || !Array.isArray(json.data) || json.data.length < 3) {
+      throw new Error('Incomplete data response from page service');
+    }
+
+    const [arEdition, enEdition, idEdition] = json.data;
+    const ayahsCount = arEdition.ayahs.length;
+    const ayahs: (AyahData & { surahNumber: number; surahName: string })[] = [];
+
+    let mainJuz = 1;
+    let mainSurahNum = 1;
+    let mainSurahName = '';
+
+    for (let i = 0; i < ayahsCount; i++) {
+      const arItem = arEdition.ayahs[i];
+      const enItem = enEdition?.ayahs?.[i];
+      const idItem = idEdition?.ayahs?.[i];
+      const sNum = arItem.surah?.number || 1;
+      const sName = arItem.surah?.englishName || `Surah ${sNum}`;
+
+      if (i === 0) {
+        mainJuz = arItem.juz || 1;
+        mainSurahNum = sNum;
+        mainSurahName = sName;
+      }
+
+      const numInSurah = arItem.numberInSurah;
+      const numInQuran = arItem.number;
+      const rawAr = arItem.text;
+      const tokens = parseQuranicTajwid(rawAr);
+
+      ayahs.push({
+        numberInSurah: numInSurah,
+        numberInQuran: numInQuran,
+        surahNumber: sNum,
+        surahName: sName,
+        textAr: rawAr,
+        textEnOxford: enItem?.text || 'Oxford translation in preparation.',
+        textIdKemenag: idItem?.text || 'Terjemahan Kemenag RI sedang dimuat.',
+        transliteration: `Ayat ${numInSurah}`,
+        audioUrl: getAudioReciterUrl(reciterId, sNum, numInSurah),
+        juz: arItem.juz || mainJuz,
+        page: pageNumber,
+        tokens,
+      });
+    }
+
+    const result: PageDetail = {
+      pageNumber,
+      juz: mainJuz,
+      surahNumber: mainSurahNum,
+      surahName: mainSurahName,
+      ayahs,
+    };
+
+    PAGE_CACHE.set(pageNumber, result);
+    return result;
+  } catch (err) {
+    console.warn(`Error fetching page ${pageNumber}:`, err);
+    throw err;
+  }
+}
+

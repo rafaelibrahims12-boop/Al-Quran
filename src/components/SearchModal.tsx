@@ -7,12 +7,14 @@ interface SearchModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectSurah: (surahNumber: number, targetAyah?: number) => void;
+  onSelectPage?: (pageNumber: number) => void;
 }
 
 export const SearchModal: React.FC<SearchModalProps> = ({
   isOpen,
   onClose,
   onSelectSurah,
+  onSelectPage,
 }) => {
   const [query, setQuery] = useState('');
 
@@ -31,11 +33,11 @@ export const SearchModal: React.FC<SearchModalProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  // Filter surahs and parse potential "surah:ayah" pattern
-  const { results, parsedJump } = useMemo(() => {
+  // Filter surahs and parse potential "surah:ayah" or "halaman" pattern
+  const { results, parsedJump, parsedPage } = useMemo(() => {
     const cleanQuery = query.trim().toLowerCase();
     if (!cleanQuery) {
-      return { results: ALL_SURAHS.slice(0, 12), parsedJump: null };
+      return { results: ALL_SURAHS.slice(0, 12), parsedJump: null, parsedPage: null };
     }
 
     // Check for "surah:ayah" or "surah ayah" (e.g. "2:255" or "18 10")
@@ -49,7 +51,17 @@ export const SearchModal: React.FC<SearchModalProps> = ({
       }
     }
 
-    const filtered = ALL_SURAHS.filter((s) => {
+    // Check for page jump (e.g. "hal 50", "halaman 200", "p 100", "p.45")
+    const matchPage = cleanQuery.match(/^(?:hal|halaman|page|p|hlm)[\.\s]*(\d{1,3})$/i);
+    let jumpPage: number | null = null;
+    if (matchPage) {
+      const p = parseInt(matchPage[1], 10);
+      if (p >= 1 && p <= 604) {
+        jumpPage = p;
+      }
+    }
+
+    const filtered = ALL_SURAHS.filter((s: SurahSummary) => {
       const numMatch = s.number.toString() === cleanQuery;
       const enMatch = s.englishName.toLowerCase().includes(cleanQuery);
       const arMatch = s.name.includes(cleanQuery);
@@ -58,7 +70,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
       return numMatch || enMatch || arMatch || idTransMatch || enTransMatch;
     });
 
-    return { results: filtered, parsedJump: jumpTarget };
+    return { results: filtered, parsedJump: jumpTarget, parsedPage: jumpPage };
   }, [query]);
 
   if (!isOpen) return null;
@@ -108,9 +120,30 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                 onSelectSurah(parsedJump.surah, parsedJump.ayah);
                 onClose();
               }}
-              className="px-3 py-1 rounded bg-amber-500 text-slate-950 font-bold hover:bg-amber-400 transition-colors"
+              className="px-3 py-1 rounded bg-amber-500 text-slate-950 font-bold hover:bg-amber-400 transition-colors cursor-pointer"
             >
               Buka Sekarang
+            </button>
+          </div>
+        )}
+
+        {/* Quick Page Jump Notification if recognized */}
+        {parsedPage && (
+          <div className="px-4 py-2.5 bg-emerald-500/15 border-b border-emerald-500/30 flex items-center justify-between text-xs text-emerald-200">
+            <span className="flex items-center gap-1.5 font-medium">
+              <Sparkles className="w-4 h-4 text-emerald-400" />
+              Lompat langsung ke Halaman #{parsedPage} (Mushaf Madinah)
+            </span>
+            <button
+              onClick={() => {
+                if (onSelectPage) {
+                  onSelectPage(parsedPage);
+                }
+                onClose();
+              }}
+              className="px-3 py-1 rounded bg-emerald-500 text-slate-950 font-bold hover:bg-emerald-400 transition-colors cursor-pointer"
+            >
+              Buka Halaman
             </button>
           </div>
         )}

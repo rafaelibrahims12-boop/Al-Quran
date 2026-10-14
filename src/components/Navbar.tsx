@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Moon, Sun, Settings2, Bookmark, BookOpen, Sparkles } from 'lucide-react';
+import { Search, Moon, Sun, Settings2, Bookmark, BookOpen, Sparkles, FileText, Shuffle } from 'lucide-react';
 
 interface NavbarProps {
   isDarkMode: boolean;
@@ -9,6 +9,8 @@ interface NavbarProps {
   onOpenTajwidGuide: () => void;
   onOpenBookmarks: () => void;
   onOpenSurahList: () => void;
+  onOpenPages: () => void;
+  onOpenWheel: () => void;
   currentSurahName?: string;
   currentAyahNumber?: number;
 }
@@ -21,6 +23,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenTajwidGuide,
   onOpenBookmarks,
   onOpenSurahList,
+  onOpenPages,
+  onOpenWheel,
   currentSurahName,
   currentAyahNumber,
 }) => {
@@ -59,11 +63,28 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
 
           <button
+            onClick={onOpenPages}
+            className="hover:text-amber-600 dark:hover:text-amber-400 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer"
+          >
+            <FileText className="w-4 h-4 text-amber-500" />
+            <span>Halaman & Juz</span>
+          </button>
+
+          <button
             onClick={onOpenTajwidGuide}
             className="hover:text-amber-600 dark:hover:text-amber-400 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer"
           >
             <Sparkles className="w-4 h-4 text-emerald-500" />
             <span>7 Tajwid Oxford</span>
+          </button>
+
+          <button
+            onClick={onOpenWheel}
+            className="hover:text-amber-500 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer text-amber-600 dark:text-amber-400 font-semibold"
+            title="Roda Putar Tilawah 24 Siswa (Juz 2-19)"
+          >
+            <Shuffle className="w-4 h-4 text-amber-500 animate-pulse" />
+            <span>Roda Kelas (24 Siswa)</span>
           </button>
 
           <button
@@ -77,6 +98,15 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Zone 3: Primary Action & Controls */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          {/* Quick Wheel Button for Mobile */}
+          <button
+            onClick={onOpenWheel}
+            className="md:hidden p-2 rounded-lg text-amber-500 bg-amber-500/10 hover:bg-amber-500/20 transition-colors cursor-pointer"
+            title="Roda Putar Tilawah 24 Siswa"
+          >
+            <Shuffle className="w-4 h-4" />
+          </button>
+
           {/* Quick Search Action */}
           <button
             onClick={onOpenSearch}
